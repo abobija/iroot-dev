@@ -1,0 +1,3 @@
+[submodule "ws32"]
+	path = ws32
+	url = https://github.com/abobija/ws32.git
