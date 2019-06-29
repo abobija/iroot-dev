@@ -1,6 +1,7 @@
 local M = {}
 
 local ws = nil
+local connected = false
 local on_connection_callback = nil
 local on_message_callback = nil
 
@@ -25,13 +26,25 @@ M.connect = function()
     return M
 end
 
+M.subscribe = function(channel)
+    if connected == false then
+        print('iroot device not connected so cannot subscribe')
+        return
+    end
+
+    ws.send(sjson.encode({
+        type = 'subscribe',
+        channel = channel
+    }))
+end
+
 return function(url, username, password)
     M.url = url
     M.auth_key = encoder.toBase64(username .. ':' .. password)
     
     ws = require('ws32_client')
         .on('receive', function(data, ws)
-            print('ws received: ', data)
+            --print('ws received: ', data)
 
             if on_message_callback == nil then return end
 
@@ -42,12 +55,15 @@ return function(url, username, password)
             end
         end)
         .on('connection', function(ws)
+            connected = true
+            
             if on_connection_callback ~= nil then
                 on_connection_callback(M)
             end
         end)
         .on('disconnection', function(err, ws)
-            print('ws disconnected')
+            --print('ws disconnected')
+            connected = false
         end)
 
     return M
