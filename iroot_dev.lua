@@ -36,6 +36,8 @@ M.subscribe = function(channel)
         type = 'subscribe',
         channel = channel
     }))
+	
+	return M
 end
 
 return function(url, username, password)
