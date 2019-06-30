@@ -40,6 +40,22 @@ M.subscribe = function(channel)
 	return M
 end
 
+M.publish = function(channel, topic, data)
+    if connected == false then
+        print('iroot device not connected so cannot publish')
+        return
+    end
+
+    ws.send(sjson.encode({
+        type = 'publish',
+        channel = channel,
+        topic = topic,
+        data = data
+    }))
+
+    return M
+end
+
 return function(url, username, password)
     M.url = url
     M.auth_key = encoder.toBase64(username .. ':' .. password)
