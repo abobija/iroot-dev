@@ -3,7 +3,7 @@
 
 ## Usage
 
-This example will subscribe device to `/home/room/led` **channel**. Controlling LED attached to gpio 2 can be done by sending **data** `ON` or `OFF` to the **topic** `state`.
+This example will **subscribe** device to `/home/room/led` **channel**. Controlling LED attached to gpio 2 can be done by sending **data** `ON` or `OFF` to the **topic** `state`.
 
 ```lua
 local function init_dev()
