@@ -5,6 +5,8 @@
 
 This example will **subscribe** device to `/home/room/led` **channel**. Controlling LED attached to gpio 2 can be done by sending **data** `ON` or `OFF` to the **topic** `state`.
 
+_Device 1_
+
 ```lua
 local function init_dev()
     local channel_path = '/home/room/led'
@@ -25,6 +27,50 @@ local function init_dev()
                     gpio.write(led_gpio, 0)
                 end
             end
+        end)
+        .connect()
+end
+
+wifi.mode(wifi.STATION)
+
+wifi.sta.config({
+    ssid = "YOUR_WIFI_SSID",
+    pwd  = "PLS_LET_ME_IN",
+    auto = false
+})
+
+wifi.sta.on('got_ip', init_dev)
+
+wifi.start()
+wifi.sta.connect()
+```
+
+And this code will **publish** `ON` | `OFF` **data** to **topic** `state` on **channel** `/home/room/led` every 5 sec.
+
+_Device 2_
+
+```lua
+local function init_dev()
+    local dev = nil
+    local channel_path = '/home/room/led'
+    local state_for_send = true
+    local timer = tmr.create()
+    
+    timer:register(5000, tmr.ALARM_AUTO, function() 
+         if state_for_send == true then
+            dev.publish(channel_path, 'state', 'OFF')
+            state_for_send = false
+         else
+            dev.publish(channel_path, 'state', 'ON')
+            state_for_send = true
+         end
+    end)
+
+    dev = require('iroot_dev')('192.168.0.105:8080', 'dev32-led', 'test1234')
+        .on('connection', function(_dev)
+            dev.subscribe(channel_path)
+
+            timer:start()
         end)
         .connect()
 end
