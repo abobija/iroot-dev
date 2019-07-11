@@ -8,16 +8,19 @@ This example will **subscribe** device to `/home/room/led` **channel**. Controll
 _Device 1_
 
 ```lua
+local dev = nil
+
 local function init_dev()
-    local channel_path = '/home/room/led'
+    if dev ~= nil then return end
+
     local led_gpio = 2
 
     gpio.config({ gpio = led_gpio, dir = gpio.IN_OUT })
     gpio.write(led_gpio, 0)
 
-    require('iroot_dev')('192.168.0.105:8080', 'dev32', 'test1234')
+    dev = require('iroot_dev')('192.168.0.105:8080', 'dev32', 'test1234')
         .on('connection', function(dev)
-            dev.subscribe(channel_path, function(topic, data)
+            dev.subscribe('/home/room/led', function(topic, data)
                 if topic == 'state' then
                     if data == 'ON' then
                         gpio.write(led_gpio, 1)
@@ -49,8 +52,11 @@ And this code will **publish** `ON` | `OFF` **data** to **topic** `state` on **c
 _Device 2_
 
 ```lua
+local dev = nil
+
 local function init_dev()
-    local dev = nil
+    if dev ~= nil then return end
+    
     local channel_path = '/home/room/led'
     local state_for_send = true
     local timer = tmr.create()
