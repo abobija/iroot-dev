@@ -3,13 +3,28 @@ local M = {}
 local ws = nil
 local connected = false
 local on_connection_callback = nil
-local on_message_callback = nil
+local subscriptions = {}
+
+local function add_subscription(channel, callback)
+    table.insert(subscriptions, {
+        channel  = channel,
+        callback = callback
+    })
+end
+
+local function get_subscription(channel)
+    for _, s in pairs(subscriptions) do
+        if s.channel == channel then
+            return s
+        end
+    end
+
+    return nil
+end
 
 M.on = function(callback_name, callback_foo)
     if callback_name == 'connection' then
         on_connection_callback = callback_foo
-    elseif callback_name == 'message' then
-        on_message_callback = callback_foo
     end
 
     return M
@@ -26,10 +41,14 @@ M.connect = function()
     return M
 end
 
-M.subscribe = function(channel)
+M.subscribe = function(channel, message_callback)
     if connected == false then
         print('iroot device not connected so cannot subscribe')
         return
+    end
+
+    if message_callback ~= nil then
+        add_subscription(channel, message_callback)
     end
 
     ws.send(sjson.encode({
@@ -64,15 +83,20 @@ return function(url, username, password)
         .on('receive', function(data, ws)
             --print('ws received: ', data)
 
-            if on_message_callback == nil then return end
+            if #subscriptions == 0 then return end
 
             local ok, msg = pcall(sjson.decode, data)
 
             if ok then
-                on_message_callback(msg.channel, msg.topic, msg.data)
+                local sub = get_subscription(msg.channel)
+                
+                if sub ~= nil then
+                    sub.callback(msg.topic, msg.data)
+                end
             end
         end)
         .on('connection', function(ws)
+            --print('ws connected')
             connected = true
             
             if on_connection_callback ~= nil then

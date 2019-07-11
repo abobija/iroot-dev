@@ -17,16 +17,15 @@ local function init_dev()
 
     require('iroot_dev')('192.168.0.105:8080', 'dev32', 'test1234')
         .on('connection', function(dev)
-            dev.subscribe(channel_path)
-        end)
-        .on('message', function(channel, topic, data)
-            if channel == channel_path and topic == 'state' then
-                if data == 'ON' then
-                    gpio.write(led_gpio, 1)
-                elseif data == 'OFF' then
-                    gpio.write(led_gpio, 0)
+            dev.subscribe(channel_path, function(topic, data)
+                if topic == 'state' then
+                    if data == 'ON' then
+                        gpio.write(led_gpio, 1)
+                    elseif data == 'OFF' then
+                        gpio.write(led_gpio, 0)
+                    end
                 end
-            end
+            end)
         end)
         .connect()
 end
